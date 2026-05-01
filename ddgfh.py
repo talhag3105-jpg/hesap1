@@ -20,7 +20,7 @@ bot = mineflayer.createBot({
 # --- TERMİNALDEN KONTROL FONKSİYONU ---
 def terminal_control():
     while True:
-        komut = input("") # Terminale yazdığın şeyi bekler
+        # komut = input("") # Terminale yazdığın şeyi bekler
         if komut:
             bot.chat(komut) # Yazdığın her şeyi oyuna iletir
             print(f"📡 Komut gönderildi: {komut}")
