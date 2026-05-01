@@ -1,52 +1,56 @@
-import time
 from javascript import require, On
-from keep_alive import keep_alive
+import time
+import threading # Terminal girdisi için gerekli
 
-# 7/24 aktif kalması için web sunucusunu başlatır
-keep_alive()
-
-# Mineflayer kütüphanesini yükle
 mineflayer = require('mineflayer')
 
-# BOT AYARLARI - Burayı kendi bilgilerinle kontrol et
+# --- AYARLAR ---
+IP_ADRESI = 'Play.SaloonNetwork.com'
+BOT_ADI = 'beyzacetin'
+SIFRE = 'a818A939'
+SURUM = '1.21.11' 
+# ---------------
+
 bot = mineflayer.createBot({
-    'host': 'Play.SaloonNetwork.com',
-    'port': 25565,
-    'username': 'beyzacetin', # Botun oyundaki adı
-    'version': '1.21.11'       # Sunucu sürümü
+    'host': IP_ADRESI,
+    'username': BOT_ADI,
+    'version': SURUM
 })
 
-print("Bot baslatiliyor... Lutfen bekleyin.")
+# --- TERMİNALDEN KONTROL FONKSİYONU ---
+def terminal_control():
+    while True:
+        komut = input("") # Terminale yazdığın şeyi bekler
+        if komut:
+            bot.chat(komut) # Yazdığın her şeyi oyuna iletir
+            print(f"📡 Komut gönderildi: {komut}")
+
+# Terminal dinlemeyi ayrı bir kolda (thread) başlat
+threading.Thread(target=terminal_control, daemon=True).start()
 
 @On(bot, 'spawn')
-def handle_spawn(this, *args):
-    print("Bot sunucuya ve dunyaya basariyla giris yapti!")
+def handle_spawn(*args):
+    print(f"✅ {BOT_ADI} sunucuya girdi! Terminalden komut yazabilirsin.")
     
-    # Sunucunun botu algılaması için 5 saniye bekleme
+    # Otomatik giriş süreci
     time.sleep(5)
+    bot.chat(f'/login {SIFRE}')
     
-    # Otomatik komut gönderimi (Tek blok adana gitmesi için)
+    time.sleep(8)
     bot.chat('/tekblok')
-    print("Komut gonderildi: /tekblok")
+    
+    time.sleep(12)
+    bot.chat('/home')
 
 @On(bot, 'chat')
 def handle_chat(this, username, message, *args):
-    # Eğer oyundan bota komut vermek istersen (sadece senin adınla yazılanları dinler)
-    if username == "beyzacetin":
-        if message.startswith("!yaz "):
-            komut = message.replace("!yaz ", "")
-            bot.chat(komut)
-            print(f"Oyun icinden gelen komut uygulandi: {komut}")
+    # Oyundaki konuşmaları terminalde görmen lazım ki ne olduğunu bilesin
+    print(f"💬 [{username}]: {message}")
 
 @On(bot, 'kicked')
 def handle_kicked(this, reason, *args):
-    # Bot sunucudan atılırsa loglara yazar
-    print(f"Bot sunucudan atildi! Sebep: {reason}")
+    print(f"❌ Atıldık! Sebep: {reason}")
 
 @On(bot, 'error')
 def handle_error(this, err, *args):
-    # Herhangi bir hata oluşursa loglara yazar (Failed hatasını önlemek için önemli)
-    print(f"Bir hata olustu: {err}")
-
-# KRİTİK: Render'da 'EOFError' almamak için input("") satırı tamamen kaldırılmıştır.
-# Bot artık kendi kendine otomatik bağlanacak.
+    print(f"⚠️ Hata: {err}")
